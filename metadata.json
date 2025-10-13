@@ -5,10 +5,11 @@
   "settings-schema": "org.gnome.shell.extensions.accent-icons-theme",
   "shell-version": [
     "47",
-    "48"
+    "48",
+    "49"
   ],
   "url": "https://github.com/florintanasa/accent-icons-theme",
   "uuid": "accent-icons-theme@brgvos",
-  "version": 3,
-  "version-name": "2"
+  "version": 4,
+  "version-name": "3"
 }
