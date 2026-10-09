@@ -3,6 +3,19 @@
  */
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+
+const YARU_THEME_BY_ACCENT = {
+    blue: 'Yaru-blue',
+    teal: 'Yaru-prussiangreen',
+    green: 'Yaru-olive',
+    yellow: 'Yaru-yellow',
+    orange: 'Yaru',
+    red: 'Yaru-red',
+    pink: 'Yaru-magenta',
+    purple: 'Yaru-purple',
+    slate: 'Yaru-wartybrown',
+};
 
 export default class AccentColorIconsThemeExtension extends Extension {
     _settings = null;
@@ -67,9 +80,39 @@ export default class AccentColorIconsThemeExtension extends Extension {
         const variant = colorScheme === 'prefer-dark' ? 'dark' : 'light';
         const key = `${accentColor}-theme-${variant}`;
 
-        // Theme names are user-configurable in the extension preferences.
-        const customTheme = this._preferences.get_string(key);
-        if (customTheme)
-            this._settings.set_string('icon-theme', customTheme);
+        // Use a configured theme when installed. This keeps custom themes working
+        // while allowing older Fluent defaults to fall back to the matching Yaru
+        // variant on systems where Fluent is not installed.
+        const configuredTheme = this._preferences.get_string(key);
+        let theme = configuredTheme;
+
+        if (!this._iconThemeExists(theme)) {
+            const yaruBase = YARU_THEME_BY_ACCENT[accentColor];
+            if (!yaruBase)
+                return;
+
+            const yaruTheme = variant === 'dark' ? `${yaruBase}-dark` : yaruBase;
+            if (!this._iconThemeExists(yaruTheme))
+                return;
+
+            theme = yaruTheme;
+        }
+
+        if (this._settings.get_string('icon-theme') !== theme)
+            this._settings.set_string('icon-theme', theme);
+    }
+
+    _iconThemeExists(themeName) {
+        if (!themeName)
+            return false;
+
+        const iconDirectories = [
+            `${GLib.get_user_data_dir()}/icons`,
+            `${GLib.get_home_dir()}/.icons`,
+            ...GLib.get_system_data_dirs().map(directory => `${directory}/icons`),
+        ];
+
+        return iconDirectories.some(directory =>
+            Gio.File.new_for_path(`${directory}/${themeName}/index.theme`).query_exists(null));
     }
 }
