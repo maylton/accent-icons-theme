@@ -20,6 +20,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+
 export default class AccentDirsPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const preferences = this.getSettings();
@@ -29,106 +30,106 @@ export default class AccentDirsPreferences extends ExtensionPreferences {
         });
         const GeneralGroup = new Adw.PreferencesGroup({
             title: _('General'),
-            description: _('Configure General Options'),
+            description: _('Configure general options'),
         });
         page.add(GeneralGroup);
+
         const changeAppColors = new Adw.SwitchRow({
             title: _('App Icons'),
-            subtitle: _('Match app icons with accent color (Fluent colored icons only).'),
+            subtitle: _('Automatically match app icons to the system accent color and light/dark appearance.'),
         });
         GeneralGroup.add(changeAppColors);
-        // Add custom theme light selection group
+
+        const accentColors = [
+            'blue', 'teal', 'green', 'yellow',
+            'orange', 'red', 'pink', 'purple', 'slate',
+        ];
+
+        const iconThemesLight = this._getAvailableIconThemes();
         const ThemeGroupLight = new Adw.PreferencesGroup({
-            title: _('Custom Icon Themes Light'),
-            description: _('Select custom icon themes light for each accent color'),
+            title: _('Light Icon Themes'),
+            description: _('Choose the icon theme for each system accent color in light mode.'),
         });
         page.add(ThemeGroupLight);
-        // Get available icon themes light
-        const iconThemesLight = this._getAvailableIconThemes();
-        // Create dropdown for each accent color
-        const accentColorsLight = [
-            'blue', 'teal', 'green', 'yellow',
-            'orange', 'red', 'pink', 'purple', 'slate'
-        ];
-        accentColorsLight.forEach(color => {
+
+        accentColors.forEach(color => {
             const row = new Adw.ComboRow({
                 title: _(color.charAt(0).toUpperCase() + color.slice(1)),
                 model: this._createIconThemeModel(iconThemesLight),
-                selected: this._getSelectedIndexLight(preferences, color, iconThemesLight)
+                selected: this._getSelectedIndex(preferences, `${color}-theme-light`, iconThemesLight),
             });
             row.connect('notify::selected', () => {
                 const selected = iconThemesLight[row.selected];
-                preferences.set_string(`${color}-theme-light`, selected);
+                if (selected)
+                    preferences.set_string(`${color}-theme-light`, selected);
             });
             ThemeGroupLight.add(row);
         });
-        // Add custom theme dark selection group
+
+        const iconThemesDark = this._getAvailableIconThemes();
         const ThemeGroupDark = new Adw.PreferencesGroup({
-            title: _('Custom Icon Themes Dark'),
-            description: _('Select custom icon themes dark for each accent color'),
+            title: _('Dark Icon Themes'),
+            description: _('Choose the icon theme for each system accent color in dark mode.'),
         });
         page.add(ThemeGroupDark);
-        // Get available icon themes dark
-        const iconThemesDark = this._getAvailableIconThemes();
-        // Create dropdown for each accent color
-        const accentColorsDark = [
-            'blue', 'teal', 'green', 'yellow',
-            'orange', 'red', 'pink', 'purple', 'slate'
-        ];
-        accentColorsDark.forEach(color => {
+
+        accentColors.forEach(color => {
             const row = new Adw.ComboRow({
                 title: _(color.charAt(0).toUpperCase() + color.slice(1)),
                 model: this._createIconThemeModel(iconThemesDark),
-                selected: this._getSelectedIndexDark(preferences, color, iconThemesDark)
+                selected: this._getSelectedIndex(preferences, `${color}-theme-dark`, iconThemesDark),
             });
             row.connect('notify::selected', () => {
                 const selected = iconThemesDark[row.selected];
-                preferences.set_string(`${color}-theme-dark`, selected);
+                if (selected)
+                    preferences.set_string(`${color}-theme-dark`, selected);
             });
             ThemeGroupDark.add(row);
         });
+
         window.add(page);
         preferences.bind('change-app-colors', changeAppColors, 'active', Gio.SettingsBindFlags.DEFAULT);
         return Promise.resolve();
     }
+
     _getAvailableIconThemes() {
         const themes = new Set();
         const directories = [
             '/usr/local/share/icons',
             '/usr/share/icons',
-            GLib.get_home_dir() + '/.local/share/icons',
-            GLib.get_home_dir() + '/.icons'
+            GLib.get_user_data_dir() + '/icons',
+            GLib.get_home_dir() + '/.icons',
         ];
-        // Scan directories for icon themes
+
         directories.forEach(dir => {
-            if (GLib.file_test(dir, GLib.FileTest.IS_DIR)) {
-                const directory = Gio.File.new_for_path(dir);
-                const enumerator = directory.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, null);
-                let info;
-                while ((info = enumerator.next_file(null))) {
-                    const path = dir + '/' + info.get_name();
-                    if (this._isValidIconTheme(path)) {
-                        themes.add(info.get_name());
-                    }
-                }
+            if (!GLib.file_test(dir, GLib.FileTest.IS_DIR))
+                return;
+
+            const directory = Gio.File.new_for_path(dir);
+            const enumerator = directory.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, null);
+            let info;
+            while ((info = enumerator.next_file(null))) {
+                const path = dir + '/' + info.get_name();
+                if (this._isValidIconTheme(path))
+                    themes.add(info.get_name());
             }
+            enumerator.close(null);
         });
+
         return Array.from(themes).sort();
     }
+
     _isValidIconTheme(path) {
         return GLib.file_test(path + '/index.theme', GLib.FileTest.EXISTS);
     }
+
     _createIconThemeModel(themes) {
         return new Gtk.StringList({ strings: themes });
     }
-    _getSelectedIndexLight(preferences, color, themes) {
-        const savedTheme = preferences.get_string(`${color}-theme-light`);
-        const theme = savedTheme;
-        return Math.max(0, themes.indexOf(theme));
-    }
-    _getSelectedIndexDark(preferences, color, themes) {
-        const savedTheme = preferences.get_string(`${color}-theme-dark`);
-        const theme = savedTheme;
-        return Math.max(0, themes.indexOf(theme));
+
+    _getSelectedIndex(preferences, key, themes) {
+        const savedTheme = preferences.get_string(key);
+        const index = themes.indexOf(savedTheme);
+        return index >= 0 ? index : Math.max(0, themes.indexOf('Yaru'));
     }
 }
