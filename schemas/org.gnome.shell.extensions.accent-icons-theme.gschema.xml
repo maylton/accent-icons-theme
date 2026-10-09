@@ -42,7 +42,7 @@
             <summary>Icon theme for purple accent in light mode</summary>
         </key>
         <key type="s" name="slate-theme-light">
-            <default>"Yaru-wartybrown"</default>
+            <default>"Yaru-sage"</default>
             <summary>Icon theme for slate accent in light mode</summary>
         </key>
 
@@ -80,7 +80,7 @@
             <summary>Icon theme for purple accent in dark mode</summary>
         </key>
         <key type="s" name="slate-theme-dark">
-            <default>"Yaru-wartybrown-dark"</default>
+            <default>"Yaru-sage-dark"</default>
             <summary>Icon theme for slate accent in dark mode</summary>
         </key>
     </schema>
