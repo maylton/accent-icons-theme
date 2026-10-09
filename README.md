@@ -1,14 +1,30 @@
-# Accent Icons Theme — GNOME 51 compatibility fork
+# Accent Icons Theme — GNOME 51 / Yaru fork
 
-This fork updates the original Accent Icons Theme for GNOME Shell 51 and fixes settings signal cleanup and icon-theme restoration.
+This fork updates Accent Icons Theme for GNOME Shell 51, cleans up settings signal handlers, restores the previous icon theme when disabled, and provides Yaru icon-theme defaults.
 
-The extension selects an installed icon theme based on the accent color and light/dark preference configured in GNOME Settings.
+The extension follows the GNOME system accent color and light/dark preference by selecting a matching installed icon theme. Configured themes remain editable in the preferences.
 
 ## Requirements
 
 - GNOME Shell 47–51
-- An icon theme for each accent/appearance combination configured in the extension preferences
-- The default preferences use the Fluent icon theme family. Fluent icon themes are not bundled with this extension.
+- A matching icon-theme variant for the selected accent and appearance
+- Yaru icon themes for the default mapping (the Yaru theme family is not bundled with this extension)
+
+## Default Yaru mapping
+
+| GNOME accent | Light icon theme | Dark icon theme |
+| --- | --- | --- |
+| Blue | `Yaru-blue` | `Yaru-blue-dark` |
+| Teal | `Yaru-prussiangreen` | `Yaru-prussiangreen-dark` |
+| Green | `Yaru-olive` | `Yaru-olive-dark` |
+| Yellow | `Yaru-yellow` | `Yaru-yellow-dark` |
+| Orange | `Yaru` | `Yaru-dark` |
+| Red | `Yaru-red` | `Yaru-red-dark` |
+| Pink | `Yaru-magenta` | `Yaru-magenta-dark` |
+| Purple | `Yaru-purple` | `Yaru-purple-dark` |
+| Slate | `Yaru-wartybrown` | `Yaru-wartybrown-dark` |
+
+If an older preference points to a theme that is not installed (for example, a Fluent theme), the extension falls back to the matching installed Yaru variant. The extension leaves the existing icon theme unchanged if neither the configured theme nor the fallback is available.
 
 ## Install from source
 
@@ -21,11 +37,11 @@ cp -r schemas ~/.local/share/gnome-shell/extensions/accent-icons-theme@brgvos/
 glib-compile-schemas ~/.local/share/gnome-shell/extensions/accent-icons-theme@brgvos/schemas
 ~~~
 
-Then enable Accent Icons Theme in GNOME Extensions and configure the icon-theme names in its preferences.
+Then enable Accent Icons Theme in GNOME Extensions.
 
-## Yaru note
+## Validation status
 
-Yaru variants are not configured as defaults yet. First verify which icon-theme directories are installed on your system, then select matching names in the extension preferences. Adding GNOME 51 to compatibility metadata does not create color variants.
+The source changes target GNOME Shell 51, but runtime validation on GNOME Shell 51 still needs to be performed. The Yaru color-to-variant mapping is a practical mapping to the icon themes installed on the target system; all mappings can be changed in the extension preferences.
 
 ## License
 
