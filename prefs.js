@@ -28,17 +28,17 @@ export default class AccentDirsPreferences extends ExtensionPreferences {
             title: _('General'),
             iconName: 'dialog-information-symbolic',
         });
-        const GeneralGroup = new Adw.PreferencesGroup({
+        const generalGroup = new Adw.PreferencesGroup({
             title: _('General'),
             description: _('Configure general options'),
         });
-        page.add(GeneralGroup);
+        page.add(generalGroup);
 
         const changeAppColors = new Adw.SwitchRow({
             title: _('App Icons'),
             subtitle: _('Automatically match app icons to the system accent color and light/dark appearance.'),
         });
-        GeneralGroup.add(changeAppColors);
+        generalGroup.add(changeAppColors);
 
         const accentColors = [
             'blue', 'teal', 'green', 'yellow',
@@ -46,45 +46,47 @@ export default class AccentDirsPreferences extends ExtensionPreferences {
         ];
 
         const iconThemesLight = this._getAvailableIconThemes();
-        const ThemeGroupLight = new Adw.PreferencesGroup({
+        const themeGroupLight = new Adw.PreferencesGroup({
             title: _('Light Icon Themes'),
             description: _('Choose the icon theme for each system accent color in light mode.'),
         });
-        page.add(ThemeGroupLight);
+        page.add(themeGroupLight);
 
         accentColors.forEach(color => {
+            const key = `${color}-theme-light`;
             const row = new Adw.ComboRow({
                 title: _(color.charAt(0).toUpperCase() + color.slice(1)),
                 model: this._createIconThemeModel(iconThemesLight),
-                selected: this._getSelectedIndex(preferences, `${color}-theme-light`, iconThemesLight),
+                selected: this._getSelectedIndex(preferences, key, iconThemesLight),
             });
             row.connect('notify::selected', () => {
                 const selected = iconThemesLight[row.selected];
                 if (selected)
-                    preferences.set_string(`${color}-theme-light`, selected);
+                    preferences.set_string(key, selected);
             });
-            ThemeGroupLight.add(row);
+            themeGroupLight.add(row);
         });
 
         const iconThemesDark = this._getAvailableIconThemes();
-        const ThemeGroupDark = new Adw.PreferencesGroup({
+        const themeGroupDark = new Adw.PreferencesGroup({
             title: _('Dark Icon Themes'),
             description: _('Choose the icon theme for each system accent color in dark mode.'),
         });
-        page.add(ThemeGroupDark);
+        page.add(themeGroupDark);
 
         accentColors.forEach(color => {
+            const key = `${color}-theme-dark`;
             const row = new Adw.ComboRow({
                 title: _(color.charAt(0).toUpperCase() + color.slice(1)),
                 model: this._createIconThemeModel(iconThemesDark),
-                selected: this._getSelectedIndex(preferences, `${color}-theme-dark`, iconThemesDark),
+                selected: this._getSelectedIndex(preferences, key, iconThemesDark),
             });
             row.connect('notify::selected', () => {
                 const selected = iconThemesDark[row.selected];
                 if (selected)
-                    preferences.set_string(`${color}-theme-dark`, selected);
+                    preferences.set_string(key, selected);
             });
-            ThemeGroupDark.add(row);
+            themeGroupDark.add(row);
         });
 
         window.add(page);
@@ -108,11 +110,10 @@ export default class AccentDirsPreferences extends ExtensionPreferences {
             const directory = Gio.File.new_for_path(dir);
             const enumerator = directory.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, null);
             let info;
-            while ((info = enumerator.next_file(null))) {
-                const path = dir + '/' + info.get_name();
-                if (this._isValidIconTheme(path))
+            while ((info = enumerator.next_file(null)))
+                if (this._isValidIconTheme(dir + '/' + info.get_name()))
                     themes.add(info.get_name());
-            }
+
             enumerator.close(null);
         });
 
@@ -130,6 +131,11 @@ export default class AccentDirsPreferences extends ExtensionPreferences {
     _getSelectedIndex(preferences, key, themes) {
         const savedTheme = preferences.get_string(key);
         const index = themes.indexOf(savedTheme);
-        return index >= 0 ? index : Math.max(0, themes.indexOf('Yaru'));
+        if (index >= 0)
+            return index;
+
+        const fallbackTheme = key.endsWith('-dark') ? 'Yaru-dark' : 'Yaru';
+        const fallbackIndex = themes.indexOf(fallbackTheme);
+        return fallbackIndex >= 0 ? fallbackIndex : 0;
     }
 }
