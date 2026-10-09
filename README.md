@@ -22,9 +22,9 @@ The extension follows the GNOME system accent color and light/dark preference by
 | Red | `Yaru-red` | `Yaru-red-dark` |
 | Pink | `Yaru-magenta` | `Yaru-magenta-dark` |
 | Purple | `Yaru-purple` | `Yaru-purple-dark` |
-| Slate | `Yaru-wartybrown` | `Yaru-wartybrown-dark` |
+| Slate | `Yaru-sage` | `Yaru-sage-dark` |
 
-If an older preference points to a theme that is not installed (for example, a Fluent theme), the extension falls back to the matching installed Yaru variant. The extension leaves the existing icon theme unchanged if neither the configured theme nor the fallback is available.
+These are practical mappings between GNOME's accent names and available Yaru variants, not exact color equivalents. If an older preference points to a theme that is not installed (for example, a Fluent theme), the extension falls back to the matching installed Yaru variant. It leaves the existing icon theme unchanged if neither the configured theme nor the fallback is available.
 
 ## Install from source
 
@@ -41,7 +41,7 @@ Then enable Accent Icons Theme in GNOME Extensions.
 
 ## Validation status
 
-The source changes target GNOME Shell 51, but runtime validation on GNOME Shell 51 still needs to be performed. The Yaru color-to-variant mapping is a practical mapping to the icon themes installed on the target system; all mappings can be changed in the extension preferences.
+The code targets GNOME Shell 51, but runtime validation on GNOME Shell 51 still needs to be performed. The Yaru color-to-variant mapping can be changed in the extension preferences.
 
 ## License
 
