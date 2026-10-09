@@ -14,7 +14,7 @@ const YARU_THEME_BY_ACCENT = {
     red: 'Yaru-red',
     pink: 'Yaru-magenta',
     purple: 'Yaru-purple',
-    slate: 'Yaru-wartybrown',
+    slate: 'Yaru-sage',
 };
 
 export default class AccentColorIconsThemeExtension extends Extension {
@@ -80,9 +80,8 @@ export default class AccentColorIconsThemeExtension extends Extension {
         const variant = colorScheme === 'prefer-dark' ? 'dark' : 'light';
         const key = `${accentColor}-theme-${variant}`;
 
-        // Use a configured theme when installed. This keeps custom themes working
-        // while allowing older Fluent defaults to fall back to the matching Yaru
-        // variant on systems where Fluent is not installed.
+        // Respect configured themes when they are installed. This also allows
+        // old Fluent defaults to fall back to a matching Yaru variant.
         const configuredTheme = this._preferences.get_string(key);
         let theme = configuredTheme;
 
