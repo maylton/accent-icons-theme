@@ -1,121 +1,117 @@
 /* extension.js
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+
+const YARU_THEME_BY_ACCENT = {
+    blue: 'Yaru-blue',
+    teal: 'Yaru-prussiangreen',
+    green: 'Yaru-olive',
+    yellow: 'Yaru-yellow',
+    orange: 'Yaru',
+    red: 'Yaru-red',
+    pink: 'Yaru-magenta',
+    purple: 'Yaru-purple',
+    slate: 'Yaru-sage',
+};
 
 export default class AccentColorIconsThemeExtension extends Extension {
-    _settings;
-    _preferences;
+    _settings = null;
+    _preferences = null;
     _accentColorChangedId = 0;
     _colorSchemeChangedId = 0;
-    iconThemesLight = Object.values({});
-    iconThemesDark = Object.values({});
+    _changeAppColorsChangedId = 0;
+    _originalIconTheme = null;
 
-    // Next method is run when the extension is enabled
     enable() {
-        // Get the interface settings
         this._settings = new Gio.Settings({
-            schema: "org.gnome.desktop.interface",
+            schema: 'org.gnome.desktop.interface',
         });
-        // Initializing icon themes
-        this.iconThemesDark = Object.values({
-            blue: "Fluent-dark",
-            teal: "Fluent-teal-dark",
-            green: "Fluent-green-dark",
-            yellow: "Fluent-yellow-dark",
-            orange: "Fluent-orange-dark",
-            red: "Fluent-red-dark",
-            pink: "Fluent-pink-dark",
-            purple: "Fluent-purple-dark",
-            slate: "Fluent-grey-dark",
-        });
-        this.iconThemesLight = Object.values({
-            blue: "Fluent-light",
-            teal: "Fluent-teal-light",
-            green: "Fluent-green-light",
-            yellow: "Fluent-yellow-light",
-            orange: "Fluent-orange-light",
-            red: "Fluent-red-light",
-            pink: "Fluent-pink-light",
-            purple: "Fluent-purple-light",
-            slate: "Fluent-grey-light",
-        });
-        // Get Preferences
         this._preferences = this.getSettings();
-        // Connect to accent color changes
-        this._accentColorChangedId = this._settings.connect("changed::accent-color", this._onAccentColorChanged.bind(this));
-        // Connect to color scheme changes
-        this._colorSchemeChangedId = this._settings.connect("changed::color-scheme", this._onAccentColorChanged.bind(this));
-        // Initial theme update
+        this._originalIconTheme = this._settings.get_string('icon-theme');
+
+        this._accentColorChangedId = this._settings.connect(
+            'changed::accent-color',
+            this._onAccentColorChanged.bind(this),
+        );
+        this._colorSchemeChangedId = this._settings.connect(
+            'changed::color-scheme',
+            this._onAccentColorChanged.bind(this),
+        );
+        this._changeAppColorsChangedId = this._preferences.connect(
+            'changed::change-app-colors',
+            this._onAccentColorChanged.bind(this),
+        );
+
         this._onAccentColorChanged();
     }
 
-    // Next metod is run when the estension is disabled 
     disable() {
-        // Disconnect the signal handler
-        if (this._settings && this._accentColorChangedId) {
+        if (this._settings && this._accentColorChangedId)
             this._settings.disconnect(this._accentColorChangedId);
-            this._accentColorChangedId = 0;
-        }
-        if (this._preferences && this._colorSchemeChangedId) {
-            this._preferences.disconnect(this._colorSchemeChangedId);
-            this._colorSchemeChangedId = 0;
-        }
-        // Clear the iconThemes array
-        this.iconThemesLight = [];
-        this.iconThemesDark = [];
-        // Optionally reset to default icon theme
-        this._setIconTheme("Adwaita");
-        // Null out settings
+        if (this._settings && this._colorSchemeChangedId)
+            this._settings.disconnect(this._colorSchemeChangedId);
+        if (this._preferences && this._changeAppColorsChangedId)
+            this._preferences.disconnect(this._changeAppColorsChangedId);
+
+        // Restore the icon theme that was active before the extension was enabled.
+        if (this._settings && this._originalIconTheme)
+            this._settings.set_string('icon-theme', this._originalIconTheme);
+
+        this._accentColorChangedId = 0;
+        this._colorSchemeChangedId = 0;
+        this._changeAppColorsChangedId = 0;
+        this._originalIconTheme = null;
         this._settings = null;
         this._preferences = null;
     }
 
-     // Next metod is called when extension is enabled, color accent, edit a new path to the themes, or the switch for set link gtk4 local is changed
     _onAccentColorChanged() {
-        if(this._settings?.get_string("color-scheme") === 'prefer-dark')
-        {
-        // Get the current accent color
-        const accentColor = this._settings?.get_string("accent-color") ?? "blue";
-        // Get custom theme from preferences
-        const customTheme = this._preferences?.get_string(`${accentColor}-theme-dark`);
-        // Get the corresponding icon theme or default to Adwaita
-        const iconTheme = customTheme || "Adwaita";
-        // Set the icon theme
-        this._setIconTheme(iconTheme);
-        }
-        else
-        {
-        // Get the current accent color
-        const accentColor = this._settings?.get_string("accent-color") ?? "blue";
-        // Get custom theme from preferences
-        const customTheme = this._preferences?.get_string(`${accentColor}-theme-light`);
-        // Get the corresponding icon theme or default to Adwaita
-        const iconTheme = customTheme || "Adwaita";
-        // Set the icon theme
-        this._setIconTheme(iconTheme);            
+        if (!this._settings || !this._preferences)
+            return;
+
+        if (!this._preferences.get_boolean('change-app-colors'))
+            return;
+
+        const accentColor = this._settings.get_string('accent-color');
+        const colorScheme = this._settings.get_string('color-scheme');
+        const variant = colorScheme === 'prefer-dark' ? 'dark' : 'light';
+        const key = `${accentColor}-theme-${variant}`;
+
+        // Respect configured themes when they are installed. This also allows
+        // old Fluent defaults to fall back to a matching Yaru variant.
+        const configuredTheme = this._preferences.get_string(key);
+        let theme = configuredTheme;
+
+        if (!this._iconThemeExists(theme)) {
+            const yaruBase = YARU_THEME_BY_ACCENT[accentColor];
+            if (!yaruBase)
+                return;
+
+            const yaruTheme = variant === 'dark' ? `${yaruBase}-dark` : yaruBase;
+            if (!this._iconThemeExists(yaruTheme))
+                return;
+
+            theme = yaruTheme;
         }
 
+        if (this._settings.get_string('icon-theme') !== theme)
+            this._settings.set_string('icon-theme', theme);
     }
 
-    // Next method set the theme
-    _setIconTheme(themeName) {
-        // Set the icon theme
-        this._settings?.set_string("icon-theme", themeName);
+    _iconThemeExists(themeName) {
+        if (!themeName)
+            return false;
+
+        const iconDirectories = [
+            `${GLib.get_user_data_dir()}/icons`,
+            `${GLib.get_home_dir()}/.icons`,
+            ...GLib.get_system_data_dirs().map(directory => `${directory}/icons`),
+        ];
+
+        return iconDirectories.some(directory =>
+            Gio.File.new_for_path(`${directory}/${themeName}/index.theme`).query_exists(null));
     }
 }
