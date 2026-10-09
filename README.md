@@ -1,49 +1,32 @@
-# Accent Icons Theme
-It is a Gnome extension that changes the icons themes, based on the accent color chosen by the user in Gnome Settings (gnome-control-center), Appearance screen and by preferred color schema Light or Dark.  
-The extension is a modification of the [Accent Color Icon Theme Changer For GNOME](https://github.com/taiwbi/gnome-accent-directories) extension, thank you `Mohammad Mahdi Tayebi` for your work.  
-This extension is included in [**BRGV-OS**](https://github.com/florintanasa/brgvos-void) Linux distribution.  
+# Accent Icons Theme — GNOME 51 compatibility fork
 
-![Accent User Theme](./screenshots/accent-icons-theme.png)  
-  
-## What is necessary ...
-BRGV-OS have all [Fluent icon theme](https://github.com/vinceliuice/Fluent-icon-theme) installed in `/usr/share/icons`, thank you `Vince` for your work.  
-In [**BRGV-OS**](https://github.com/florintanasa/brgvos-void) is allready installed [Fluent icon theme](https://github.com/vinceliuice/Fluent-icon-theme):  
-  
-```txt
-Fluent
-Fluent-dark
-Fluent-green
-Fluent-green-dark
-Fluent-green-light
-Fluent-grey
-Fluent-grey-dark
-Fluent-grey-light
-Fluent-light
-Fluent-orange
-Fluent-orange-dark
-Fluent-orange-light
-Fluent-pink
-Fluent-pink-dark
-Fluent-pink-light
-Fluent-purple
-Fluent-purple-dark
-Fluent-purple-light
-Fluent-red
-Fluent-red-dark
-Fluent-red-light
-Fluent-teal
-Fluent-teal-dark
-Fluent-teal-light
-Fluent-yellow
-Fluent-yellow-dark
-Fluent-yellow-light
-```  
-  
-Also is nice to have installed [Accent gtk theme](https://github.com/florintanasa/brgvos-void/tree/main/accent-gtk-theme%40brgvos) and [Accent user theme](https://github.com/florintanasa/brgvos-void/tree/main/accent-user-theme%40brgvos), BRGV-OS have by defaults this.
+This fork updates the original Accent Icons Theme for GNOME Shell 51 and fixes settings signal cleanup and icon-theme restoration.
 
+The extension selects an installed icon theme based on the accent color and light/dark preference configured in GNOME Settings.
 
-## Warning 
+## Requirements
 
-The open-source software included in [**BRGV-OS**](https://github.com/florintanasa/brgvos-void) is distributed in the hope that it will be useful, but **WITHOUT ANY WARRANTY**.
+- GNOME Shell 47–51
+- An icon theme for each accent/appearance combination configured in the extension preferences
+- The default preferences use the Fluent icon theme family. Fluent icon themes are not bundled with this extension.
 
-The work is in progress...
+## Install from source
+
+~~~sh
+git clone https://github.com/maylton/accent-icons-theme.git
+cd accent-icons-theme
+mkdir -p ~/.local/share/gnome-shell/extensions/accent-icons-theme@brgvos
+cp extension.js metadata.json prefs.js ~/.local/share/gnome-shell/extensions/accent-icons-theme@brgvos/
+cp -r schemas ~/.local/share/gnome-shell/extensions/accent-icons-theme@brgvos/
+glib-compile-schemas ~/.local/share/gnome-shell/extensions/accent-icons-theme@brgvos/schemas
+~~~
+
+Then enable Accent Icons Theme in GNOME Extensions and configure the icon-theme names in its preferences.
+
+## Yaru note
+
+Yaru variants are not configured as defaults yet. First verify which icon-theme directories are installed on your system, then select matching names in the extension preferences. Adding GNOME 51 to compatibility metadata does not create color variants.
+
+## License
+
+GPL-2.0-or-later. See LICENSE.md.
